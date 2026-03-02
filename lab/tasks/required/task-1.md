@@ -261,7 +261,7 @@ Title: `[Task] Observe System Component Interaction`
 ### 1.7. Verify in `pgAdmin`
 
 > [!NOTE]
-> The API transformed the [`JSON`](../../../wiki/file-formats.md#json) from your request into a row in the `interacts` table.
+> The [API](../../../wiki/web-development.md#api) transformed the [`JSON`](../../../wiki/file-formats.md#json) from your request into a row in the `interacts` table.
 
 1. [Open `pgAdmin`](../../../wiki/pgadmin.md#open-pgadmin).
 2. [Run a query](../../../wiki/pgadmin.md#run-the-query) on the `interacts` table:
