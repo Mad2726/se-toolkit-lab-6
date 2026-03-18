@@ -1,37 +1,34 @@
 # Agent
 
-This repository contains a documentation agent implemented in `agent.py`.
-
-## Purpose
-The agent answers repository and wiki questions by calling an LLM with tool definitions and executing tool calls locally.
+This agent answers repository and system questions with tool calling.
 
 ## Tools
-The agent exposes two tools:
-- `list_files(path)` — lists files and directories inside the repository
-- `read_file(path)` — reads file contents from inside the repository
+- `list_files(path)` discovers files in the repository
+- `read_file(path)` reads wiki and source files
+- `query_api(method, path, body)` calls the deployed backend API
 
-## Security
-Both tools resolve paths relative to the project root and reject paths that escape the repository root. This prevents `../` traversal.
-
-## Agentic loop
-1. The CLI receives a question from the command line.
-2. It sends the question, system prompt, and tool schemas to an OpenAI-compatible LLM.
-3. If the LLM requests a tool call, the tool is executed locally.
-4. The tool result is appended back into the conversation.
-5. The loop continues until the model returns a final answer or the tool-call limit is reached.
-
-## Output format
-The agent prints a JSON object to stdout with:
-- `answer`
-- `source`
-- `tool_calls`
+## Authentication
+`query_api` uses `LMS_API_KEY` from environment variables and sends it as `Authorization: Bearer ...`.
 
 ## Environment variables
-The agent reads:
 - `LLM_API_KEY`
 - `LLM_API_BASE`
 - `LLM_MODEL`
+- `LMS_API_KEY`
+- `AGENT_API_BASE_URL` (default: `http://localhost:42002`)
+
+## Tool selection
+The agent uses:
+- `read_file` for source code, framework, Docker, ETL, and wiki questions
+- `list_files` to discover files
+- `query_api` for runtime facts, endpoint responses, status codes, and item counts
+
+## Agentic loop
+The program sends the user question and tool schemas to an OpenAI-compatible LLM. If the model asks for tools, the program executes them and sends results back. The loop stops when the model returns a final JSON answer or after a limited number of tool calls.
+
+## Lessons learned
+The key requirement is to separate documentation facts from runtime facts. The wiki can explain intended behavior, but the running backend is the source of truth for current item counts, endpoint status codes, and crash behavior. The `query_api` tool makes those checks possible. Source inspection is still necessary for bug diagnosis questions such as `ZeroDivisionError` or `TypeError` cases, because the model must both observe the failing endpoint and identify the exact problem in code.
 
 ## Usage
 ```bash
-uv run agent.py "How do you resolve a merge conflict?"
+uv run agent.py "How many items are in the database?"
